@@ -9,25 +9,6 @@ from torch import nn
 import params
 from utils import make_variable
 
-def CORAL(source, target):
-    d = source.data.shape[1]
-
-    source = torch.Tensor.float(source)
-    target = torch.Tensor.float(target)
-
-    # source covariance
-    xm = torch.mean(source, 0, keepdim=True) - source
-    xc = xm.t() @ xm
-
-    # target covariance
-    xmt = torch.mean(target, 0, keepdim=True) - target
-    xct = xmt.t() @ xmt
-
-    # frobenius norm between source and target
-    loss = torch.mean(torch.mul((xc - xct), (xc - xct)))
-    loss = loss/(4*d*d)
-
-    return loss
 
 def train_tgt(src_encoder, tgt_encoder, critic, src_data_loader, tgt_data_loader):
     """Train encoder for target domain."""
@@ -84,7 +65,7 @@ def train_tgt(src_encoder, tgt_encoder, critic, src_data_loader, tgt_data_loader
             label_concat = torch.cat((label_src, label_tgt), 0)
 
             # compute loss for critic
-            loss_critic = CORAL(pred_concat, label_concat)
+            loss_critic = criterion(pred_concat, label_concat)
             loss_critic.backward()
 
             # optimize critic
@@ -112,7 +93,7 @@ def train_tgt(src_encoder, tgt_encoder, critic, src_data_loader, tgt_data_loader
             label_tgt = make_variable(torch.ones(feat_tgt.size(0)).long())
 
             # compute loss for target encoder
-            loss_tgt = CORAL(pred_tgt, label_tgt)
+            loss_tgt = criterion(pred_tgt, label_tgt)
             loss_tgt.backward()
 
             # optimize target encoder

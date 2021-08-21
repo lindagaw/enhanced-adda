@@ -6,26 +6,6 @@ import torch
 import params
 from utils import make_variable, save_model
 
-def CORAL(source, target):
-    d = source.data.shape[1]
-
-    source = torch.Tensor.float(source)
-    target = torch.Tensor.float(target)
-
-    # source covariance
-    xm = torch.mean(source, 0, keepdim=True) - source
-    xc = xm.t() @ xm
-
-    # target covariance
-    xmt = torch.mean(target, 0, keepdim=True) - target
-    xct = xmt.t() @ xmt
-
-    # frobenius norm between source and target
-    loss = torch.mean(torch.mul((xc - xct), (xc - xct)))
-    loss = loss/(4*d*d)
-
-    return loss
-
 
 def train_src(encoder, classifier, data_loader):
     """Train classifier for source domain."""
@@ -63,7 +43,7 @@ def train_src(encoder, classifier, data_loader):
             #print(encoded.shape)
 
             preds = classifier(encoded)
-            loss = CORAL(preds, labels)
+            loss = criterion(preds, labels)
 
             # optimize source classifier
             loss.backward()
@@ -116,6 +96,8 @@ def eval_src(encoder, classifier, data_loader):
         labels = make_variable(labels.squeeze_())
 
         preds = classifier(torch.squeeze(encoder(images)))
+
+
         loss += criterion(preds, labels).data
 
         pred_cls = preds.data.max(1)[1]
