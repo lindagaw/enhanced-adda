@@ -26,9 +26,9 @@ if __name__ == '__main__':
     progenitor = progenitor.to(torch.device('cuda:0'))
 
     src_encoder = torch.nn.Sequential(*(list(progenitor.children())[:-1]))
-    src_classifier = torch.nn.Linear(1024, 31).to(torch.device('cuda:0'))
+    src_classifier = torch.nn.Linear(2048, 31).to(torch.device('cuda:0'))
     tgt_encoder = torch.nn.Sequential(*(list(progenitor.children())[:-1]))
-    tgt_classifier = torch.nn.Linear(1024, 31).to(torch.device('cuda:0'))
+    tgt_classifier = torch.nn.Linear(2048, 31).to(torch.device('cuda:0'))
 
     critic = init_model(Discriminator(input_dims=params.d_input_dims,
                                       hidden_dims=params.d_hidden_dims,
