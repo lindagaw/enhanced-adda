@@ -2,7 +2,7 @@
 
 import torch.nn as nn
 import torch.optim as optim
-
+import torch
 import params
 from utils import make_variable, save_model
 
@@ -38,7 +38,11 @@ def train_src(encoder, classifier, data_loader):
             optimizer.zero_grad()
 
             # compute loss for critic
-            preds = classifier(encoder(images))
+            encoded = torch.squeeze(encoder(images))
+
+            #print(encoded.shape)
+
+            preds = classifier(encoded)
             loss = criterion(preds, labels)
 
             # optimize source classifier
@@ -78,8 +82,8 @@ def eval_src(encoder, classifier, data_loader):
     classifier.eval()
 
     # init loss and accuracy
-    loss = 0
-    acc = 0
+    loss = 0.0
+    acc = 0.0
 
     # set loss function
     criterion = nn.CrossEntropyLoss()
@@ -89,7 +93,9 @@ def eval_src(encoder, classifier, data_loader):
         images = make_variable(images, volatile=True)
         labels = make_variable(labels)
 
-        preds = classifier(encoder(images))
+        encoded = torch.squeeze(encoder(images))
+
+        preds = classifier(encoded)
         loss += criterion(preds, labels).data
 
         pred_cls = preds.data.max(1)[1]

@@ -10,8 +10,7 @@ import params
 from utils import make_variable
 
 
-def train_tgt(src_encoder, tgt_encoder, critic,
-              src_data_loader, tgt_data_loader):
+def train_tgt(src_encoder, tgt_encoder, critic, src_data_loader, tgt_data_loader):
     """Train encoder for target domain."""
     ####################
     # 1. setup network #
@@ -22,7 +21,9 @@ def train_tgt(src_encoder, tgt_encoder, critic,
     critic.train()
 
     # setup criterion and optimizer
+    #criterion = CORAL()
     criterion = nn.CrossEntropyLoss()
+
     optimizer_tgt = optim.Adam(tgt_encoder.parameters(),
                                lr=params.c_learning_rate,
                                betas=(params.beta1, params.beta2))
@@ -56,7 +57,7 @@ def train_tgt(src_encoder, tgt_encoder, critic,
             feat_concat = torch.cat((feat_src, feat_tgt), 0)
 
             # predict on discriminator
-            pred_concat = critic(feat_concat.detach())
+            pred_concat = critic(torch.squeeze(feat_concat).detach())
 
             # prepare real and fake label
             label_src = make_variable(torch.ones(feat_src.size(0)).long())
@@ -68,10 +69,11 @@ def train_tgt(src_encoder, tgt_encoder, critic,
             loss_critic.backward()
 
             # optimize critic
-            optimizer_critic.step()
 
             pred_cls = torch.squeeze(pred_concat.max(1)[1])
             acc = (pred_cls == label_concat).float().mean()
+
+
 
             ############################
             # 2.2 train target encoder #
@@ -85,7 +87,7 @@ def train_tgt(src_encoder, tgt_encoder, critic,
             feat_tgt = tgt_encoder(images_tgt)
 
             # predict on discriminator
-            pred_tgt = critic(feat_tgt)
+            pred_tgt = critic(torch.squeeze(feat_tgt))
 
             # prepare fake labels
             label_tgt = make_variable(torch.ones(feat_tgt.size(0)).long())
@@ -129,3 +131,53 @@ def train_tgt(src_encoder, tgt_encoder, critic,
         params.model_root,
         "ADDA-target-encoder-final.pt"))
     return tgt_encoder
+
+def train_tgt_classifier(encoder, classifier, data_loader):
+    """Train classifier for source domain."""
+    ####################
+    # 1. setup network #
+    ####################
+
+    # set train state for Dropout and BN layers
+    encoder.train()
+    classifier.train()
+
+    # setup criterion and optimizer
+    optimizer = optim.Adam(
+        list(encoder.parameters()) + list(classifier.parameters()),
+        lr=params.c_learning_rate,
+        betas=(params.beta1, params.beta2))
+    criterion = nn.CrossEntropyLoss()
+
+    ####################
+    # 2. train network #
+    ####################
+
+    for epoch in range(params.num_epochs_pre):
+        for step, (images, labels) in enumerate(data_loader):
+            # make images and labels variable
+            images = make_variable(images)
+            labels = make_variable(labels.squeeze_())
+
+            # zero gradients for optimizer
+            optimizer.zero_grad()
+
+            # compute loss for critic
+            preds = classifier(torch.squeeze(encoder(images)))
+            loss = criterion(preds, labels)
+
+            # optimize source classifier
+            loss.backward()
+            optimizer.step()
+
+            # print step info
+            if ((step + 1) % params.log_step_pre == 0):
+                print("Epoch [{}/{}] Step [{}/{}]: loss={}"
+                      .format(epoch + 1,
+                              params.num_epochs_pre,
+                              step + 1,
+                              len(data_loader),
+                              loss.data))
+
+
+    return encoder, classifier

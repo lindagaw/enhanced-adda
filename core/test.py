@@ -13,8 +13,11 @@ def eval_tgt(encoder, classifier, data_loader):
     classifier.eval()
 
     # init loss and accuracy
-    loss = 0
-    acc = 0
+    loss = 0.0
+    acc = 0.0
+
+    ys_true = []
+    ys_pred = []
 
     # set loss function
     criterion = nn.CrossEntropyLoss()
@@ -24,13 +27,16 @@ def eval_tgt(encoder, classifier, data_loader):
         images = make_variable(images, volatile=True)
         labels = make_variable(labels).squeeze_()
 
-        preds = classifier(encoder(images))
+        preds = classifier(torch.squeeze(encoder(images)))
         loss += criterion(preds, labels).data
 
-        pred_cls = preds.data.max(1)[1]
-        acc += pred_cls.eq(labels.data).cpu().sum()
+        for pred, label in zip(preds, labels):
+            ys_pred.append(torch.argmax(pred).detach().cpu().numpy())
+            ys_true.append(label.detach().cpu().numpy())
+
+    acc = accuracy_score(ys_true, ys_pred)
 
     loss /= len(data_loader)
-    acc /= len(data_loader.dataset)
+    #acc /= len(data_loader.dataset)
 
     print("Avg Loss = {}, Avg Accuracy = {:2%}".format(loss, acc))
