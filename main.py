@@ -21,14 +21,15 @@ if __name__ == '__main__':
     tgt_data_loader = get_office_31(dataset = 'office-31-webcam', train=True)
     tgt_data_loader_eval = get_office_31(dataset = 'office-31-webcam', train=False)
 
-    progenitor = models.resnet152(pretrained=True)
-    progenitor.fc = torch.nn.Linear(2048, 31)
+    progenitor = models.resnet50(pretrained=True)
+    print(progenitor.fc)
+    progenitor.fc = torch.nn.Linear(1024, 31)
     progenitor = progenitor.to(torch.device('cuda:0'))
 
     src_encoder = torch.nn.Sequential(*(list(progenitor.children())[:-1]))
-    src_classifier = torch.nn.Linear(2048, 31).to(torch.device('cuda:0'))
+    src_classifier = torch.nn.Linear(1024, 31).to(torch.device('cuda:0'))
     tgt_encoder = torch.nn.Sequential(*(list(progenitor.children())[:-1]))
-    tgt_classifier = torch.nn.Linear(2048, 31).to(torch.device('cuda:0'))
+    tgt_classifier = torch.nn.Linear(1024, 31).to(torch.device('cuda:0'))
 
     critic = init_model(Discriminator(input_dims=params.d_input_dims,
                                       hidden_dims=params.d_hidden_dims,
