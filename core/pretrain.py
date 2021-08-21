@@ -1,5 +1,5 @@
 """Pre-train encoder and classifier for source dataset."""
-
+from sklearn.metrics import accuracy_score
 import torch.nn as nn
 import torch.optim as optim
 import torch
@@ -94,14 +94,10 @@ def eval_src(encoder, classifier, data_loader):
         labels = make_variable(labels)
 
         preds = classifier(torch.squeeze(encoder(images)))
-
-        print(preds.shape)
-        print(labels.shape)
-
         loss += criterion(preds, torch.squeeze(labels)).data
 
         pred_cls = preds.data.max(1)[1]
-        acc += pred_cls.eq(labels.data).cpu().sum()
+        acc += accuracy_score(labels, pred_cls)
 
     loss /= len(data_loader)
     acc /= len(data_loader.dataset)
