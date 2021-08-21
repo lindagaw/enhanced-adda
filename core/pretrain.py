@@ -96,18 +96,12 @@ def eval_src(encoder, classifier, data_loader):
         labels = make_variable(labels.squeeze_())
 
         preds = classifier(torch.squeeze(encoder(images)))
-
-
         loss += criterion(preds, labels).data
 
         pred_cls = preds.data.max(1)[1]
         #acc += pred_cls.eq(labels.data).cpu().sum()
         acc += accuracy_score(labels.cpu(), pred_cls.cpu())
 
-        print(pred_cls.cpu())
-        print(labels.cpu())
-        print(accuracy_score(labels.cpu(), pred_cls.cpu()))
-        print('-------------------')
 
     loss /= batch
     acc /= batch
