@@ -12,6 +12,9 @@ from utils import make_variable
 def CORAL(source, target):
     d = source.data.shape[1]
 
+    source = torch.Tensor.float(source)
+    target = torch.Tensor.float(target)
+
     # source covariance
     xm = torch.mean(source, 0, keepdim=True) - source
     xc = xm.t() @ xm
