@@ -1,4 +1,6 @@
 """Main script for ADDA."""
+import torch
+from torchvision import datasets, transforms, models
 
 import params
 from core import eval_src, eval_tgt, train_src, train_tgt
