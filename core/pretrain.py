@@ -97,7 +97,7 @@ def eval_src(encoder, classifier, data_loader):
         loss += criterion(preds, torch.squeeze(labels)).data
 
         pred_cls = preds.data.max(1)[1]
-        acc += accuracy_score(labels, pred_cls)
+        acc += accuracy_score(torch.squeeze(labels).cpu(), pred_cls.cpu())
 
     loss /= len(data_loader)
     acc /= len(data_loader.dataset)
