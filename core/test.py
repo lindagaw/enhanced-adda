@@ -1,5 +1,5 @@
 """Test script to classify target data."""
-
+from sklearn.metrics import accuracy_score
 import torch
 import torch.nn as nn
 
