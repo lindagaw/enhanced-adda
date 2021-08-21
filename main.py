@@ -1,4 +1,5 @@
 """Main script for ADDA."""
+import pretty_errors
 import torch
 from torchvision import datasets, transforms, models
 

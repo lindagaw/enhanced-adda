@@ -96,7 +96,7 @@ def eval_src(encoder, classifier, data_loader):
         encoded = torch.squeeze(encoder(images))
 
         preds = classifier(encoded)
-        loss += criterion(preds, labels).data
+        loss += criterion(preds, np.squeeze(labels)).data
 
         pred_cls = preds.data.max(1)[1]
         acc += pred_cls.eq(labels.data).cpu().sum()
