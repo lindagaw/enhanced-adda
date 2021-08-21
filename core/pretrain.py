@@ -1,5 +1,5 @@
 """Pre-train encoder and classifier for source dataset."""
-
+from sklearn.metrics import accuracy_score
 import torch.nn as nn
 import torch.optim as optim
 import torch
@@ -81,6 +81,7 @@ def eval_src(encoder, classifier, data_loader):
     encoder.eval()
     classifier.eval()
 
+    batch = 0
     # init loss and accuracy
     loss = 0.0
     acc = 0.0
@@ -90,23 +91,25 @@ def eval_src(encoder, classifier, data_loader):
 
     # evaluate network
     for (images, labels) in data_loader:
+        batch += 1
         images = make_variable(images, volatile=True)
-        labels = make_variable(labels)
+        labels = make_variable(labels.squeeze_())
 
         preds = classifier(torch.squeeze(encoder(images)))
 
 
-        loss += criterion(preds, torch.squeeze(labels)).data
+        loss += criterion(preds, labels).data
 
         pred_cls = preds.data.max(1)[1]
-        acc += pred_cls.eq(labels.data).cpu().sum()
+        #acc += pred_cls.eq(labels.data).cpu().sum()
+        acc += accuracy_score(labels.cpu(), pred_cls.cpu())
 
-        print(pred_cls)
-        print(labels)
-        print(acc)
+        print(pred_cls.cpu())
+        print(labels.cpu())
+        print(accuracy_score(labels.cpu(), pred_cls.cpu()))
         print('-------------------')
 
-    loss /= len(data_loader)
-    acc /= len(data_loader.dataset)
+    loss /= batch
+    acc /= batch
 
     print("Avg Loss = {}, Avg Accuracy = {:2%}".format(loss, acc))
